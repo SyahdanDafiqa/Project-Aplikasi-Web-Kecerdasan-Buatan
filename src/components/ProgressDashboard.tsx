@@ -126,7 +126,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
               <div
                 key={mod.id}
                 onClick={() => onSelectModule(mod)}
-                className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all cursor-pointer bg-slate-50/60 dark:bg-slate-850/60 flex items-center justify-between group"
+                className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all cursor-pointer bg-slate-50/60 dark:bg-slate-800/60 flex items-center justify-between group"
               >
                 <div>
                   <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">

@@ -14,60 +14,57 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
-// Initialize Gemini Client
-const geminiApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
-
-let ai: GoogleGenAI | null = null;
-if (geminiApiKey) {
-  ai = new GoogleGenAI({
-    apiKey: geminiApiKey,
+// Initialize Gemini Client dynamically to pick up environment variables at runtime
+function getGeminiClient(): { ai: GoogleGenAI; key: string } | null {
+  const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+  if (!key) return null;
+  const ai = new GoogleGenAI({
+    apiKey: key,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
       },
     },
   });
+  return { ai, key };
 }
 
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
+  const client = getGeminiClient();
   res.json({
     status: 'ok',
-    hasGeminiKey: Boolean(geminiApiKey),
+    hasGeminiKey: Boolean(client?.key),
     platform: 'InformatikaLab Server',
     timestamp: new Date().toISOString(),
   });
 });
 
-const SYSTEM_INSTRUCTION = `Anda adalah "Dosen & Tutor Cerdas Informatika" di platform InformatikaLab.
-Anda bertindak sebagai dosen dan mentor akademik Teknik Informatika yang ramah, berwawasan luas, sabar, dan komunikatif bagi mahasiswa.
+const SYSTEM_INSTRUCTION = `Anda adalah "Dosen & Tutor IT Cerdas" di platform InformatikaLab untuk mahasiswa Teknik Informatika.
 
-Keahlian utama Anda meliputi 5 pilar kurikulum Teknik Informatika:
-1. Pemrograman Web (HTML/CSS modern, JavaScript/TypeScript, React, Node.js, REST API, Web Security/OWASP)
-2. Struktur Data & Algoritma (Array, Linked List, Stack, Queue, Tree, Graph, Sorting, Searching, Big-O Notation, Dynamic Programming)
-3. Basis Data (Relational SQL, ERD, Normalisasi 1NF-BCNF, Indexing, Transaksi ACID, NoSQL)
-4. Jaringan Komputer (OSI 7 Layer, TCP/IP, Subnetting IPv4/IPv6, Routing, DNS, HTTP/HTTPS, Socket Programming)
-5. Kecerdasan Buatan / AI (Machine Learning, Regresi, Klasifikasi, Jaringan Saraf Tiruan, Deep Learning, NLP, LLM, Computer Vision)
-
-Gaya & Pedoman Komunikasi:
-- Gunakan Bahasa Indonesia yang baik, akademis namun santai, bersahabat, dan memotivasi mahasiswa.
-- Selalu berikan penjelasan terstruktur: Konsep Inti -> Analogi Sederhana -> Contoh Kode / Kasus Nyata -> Tips Praktis / Rekomendasi Best Practice.
-- Ketika menyajikan kode program, berikan komentar (comments) penjelasan baris kode dan sebutkan bahasa pemrograman di blok kode markdown (\`\`\`typescript, \`\`\`python, dsb.).
-- Jika mahasiswa bertanya tentang error/bug, lakukan analisis sistematis: identifikasi penyebab bug, berikan solusinya, dan ajarkan cara mencegahnya di masa depan.
-- Jika mahasiswa bertanya tentang algoritma, jelaskan Time Complexity (Waktu) dan Space Complexity (Ruang) dalam notasi Big-O.
-- Jika pengguna meminta soal latihan atau kuis, berikan soal konseptual atau koding yang menantang namun sesuai level.
-- Bersikaplah jujur dan suportif.`;
+Pedoman Komunikasi & Karakter Dosen:
+1. **Proporsional & To-The-Point**: Jawablah langsung inti pertanyaan mahasiswa tanpa berputar-putar. Jika mahasiswa bertanya konsep umum (contoh: "apa itu machine learning"), berikan definisi yang jernih, analogi sederhana sehari-hari, dan contoh penerapannya secara ringkas dan lugas. JANGAN membanjiri dengan rumus matematika rumit jika tidak diminta.
+2. **Kapan Menggunakan Kode Program**: Hanya sertakan cuplikan kode jika pertanyaan memang relevan dengan koding, algoritma praktis, atau diminta mahasiswa. Jika pertanyaan murni konseptual/teoretis, prioritaskan pemahaman konsep terlebih dahulu.
+3. **Nada Komunikasi**: Ramah, hangat, edukatif, dan bersahabat seperti dosen pembimbing yang suportif.
+4. **Format Jawaban Rapi**: Gunakan format Markdown yang bersih:
+   - Gunakan bullet points atau penomoran untuk daftar konsep.
+   - Tebalkan (**bold**) kata kunci penting agar mudah dipindai mata.
+   - Hindari teks yang terlalu padat tanpa spasi paragraf.
+5. **Bahasa**: Bahasa Indonesia yang baik, santai namun tetap berbobot akademis.`;
 
 // Chatbot endpoint with Server-Sent Events (SSE) streaming
 app.post('/api/chat', async (req, res) => {
   const { messages, topicContext, codeSnippet } = req.body;
+  const client = getGeminiClient();
 
-  if (!geminiApiKey || !ai) {
+  if (!client) {
     return res.status(503).json({
       error: 'GEMINI_API_KEY belum dikonfigurasi di server. Silakan atur GEMINI_API_KEY di panel Secrets atau berkas .env.',
       code: 'MISSING_API_KEY',
     });
   }
+
+  const { ai } = client;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Array pesan tidak boleh kosong.' });

@@ -93,6 +93,35 @@ RESTful API yang bersih menerapkan prinsip-prinsip berikut:
    - \`404 Not Found\`: Resource tidak ditemukan.
    - \`500 Internal Server Error\`: Bug atau crash di server.`,
 
+  'machine-learning': `### Apa Itu Machine Learning?
+
+Secara sederhana, **Machine Learning (ML)** adalah cabang dari Kecerdasan Buatan (AI) di mana komputer diajarkan untuk **belajar dari data dan pola masa lalu**, tanpa perlu diprogram secara kaku satu per satu (*explicit rules*).
+
+---
+
+#### 💡 Perbedaan Pemrograman Biasa vs Machine Learning:
+- **Pemrograman Tradisional**:
+  Data masukan + Aturan/Logika Manual $\\longrightarrow$ **Hasil Akhir**
+  *(Contoh: Menggunakan percabangan \`if...else\` manual untuk menentukan kelulusan).*
+- **Machine Learning**:
+  Data Riwayat + Contoh Jawaban $\\longrightarrow$ **Model Pintar (Aturan Terbentuk Otomatis)**
+  *(Contoh: Diberi 10.000 contoh foto rontgen paru-paru, komputer belajar sendiri membedakan paru sehat vs pneumonia).*
+
+---
+
+#### 🎯 3 Cabang Utama Machine Learning:
+1. **Supervised Learning (Pembelajaran Terarah)**:
+   - Model dilatih menggunakan data yang sudah memiliki label/jawaban.
+   - Contoh: Memprediksi harga rumah (**Regresi**) atau filter email spam vs bukan spam (**Klasifikasi**).
+2. **Unsupervised Learning (Pembelajaran Mandiri)**:
+   - Data tidak memiliki label, komputer mencari kemiripan atau pola tersembunyi.
+   - Contoh: Pengelompokan segmentasi pelanggan marketplace (**Clustering K-Means**).
+3. **Reinforcement Learning (Pembelajaran Berbasis Reward)**:
+   - Agen belajar melalui aksi (*trial and error*) untuk memaksimalkan poin hadiah (*reward*).
+   - Contoh: AI bermain catur (AlphaZero) atau navigasi mobil otonom.
+
+Apakah Anda ingin membahas contoh implementasi algoritma tertentu di Python (seperti Scikit-Learn), atau ingin memahami konsep lainnya? 😊`,
+
   'ann': `### Jaringan Saraf Tiruan (Artificial Neural Network)
 
 Jaringan Saraf Tiruan (ANN) terinspirasi dari struktur neuron biologis di otak manusia:
@@ -215,15 +244,47 @@ function simulateSmartFallback(
 ) {
   let fallbackAnswer = '';
 
-  if (query.includes('big-o') || query.includes('kompleksitas') || query.includes('asymptotic') || query.includes('algoritma')) {
+  if (
+    query.includes('machine learning') ||
+    query.includes('apa itu ml') ||
+    query.includes('pembelajaran mesin') ||
+    query.includes('belajar mesin')
+  ) {
+    fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['machine-learning'];
+  } else if (
+    query.includes('big-o') ||
+    query.includes('kompleksitas') ||
+    query.includes('asymptotic') ||
+    query.includes('algoritma')
+  ) {
     fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['big-o'];
-  } else if (query.includes('handshake') || query.includes('tcp') || query.includes('udp') || query.includes('jaringan')) {
+  } else if (
+    query.includes('handshake') ||
+    query.includes('tcp') ||
+    query.includes('udp') ||
+    query.includes('jaringan')
+  ) {
     fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['handshake'];
-  } else if (query.includes('join') || query.includes('sql') || query.includes('database') || query.includes('normalisasi')) {
+  } else if (
+    query.includes('join') ||
+    query.includes('sql') ||
+    query.includes('database') ||
+    query.includes('normalisasi')
+  ) {
     fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['sql-join'];
-  } else if (query.includes('rest') || query.includes('api') || query.includes('http') || query.includes('web')) {
+  } else if (
+    query.includes('rest') ||
+    query.includes('api') ||
+    query.includes('http') ||
+    query.includes('web')
+  ) {
     fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['rest'];
-  } else if (query.includes('neural') || query.includes('ai') || query.includes('ann') || query.includes('machine learning')) {
+  } else if (
+    query.includes('neural') ||
+    query.includes('ann') ||
+    query.includes('jaringan saraf') ||
+    query.includes('backpropagation')
+  ) {
     fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['ann'];
   } else {
     fallbackAnswer = `Halo mahasiswa Informatika! 👋

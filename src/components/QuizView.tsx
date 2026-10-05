@@ -186,7 +186,7 @@ export const QuizView: React.FC<QuizViewProps> = ({ modules, onOpenChatWithTopic
             const isCorrectOption = optIdx === currentItem.question.correctAnswerIndex;
 
             let optionStyle =
-              'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-800 dark:text-slate-200';
+              'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200';
 
             if (isAnswered) {
               if (isCorrectOption) {

@@ -41,32 +41,39 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
               const trimmed = paragraph.trim();
               if (!trimmed) return null;
 
+              // Check for Horizontal Rule
+              if (trimmed === '---' || trimmed === '***') {
+                return (
+                  <hr key={pIdx} className="my-3 border-0 border-t border-slate-200 dark:border-slate-800" />
+                );
+              }
+
               // Check for Headings
               if (trimmed.startsWith('#### ')) {
                 return (
-                  <h4 key={pIdx} className="text-base font-bold text-slate-900 dark:text-white mt-3 mb-1">
+                  <h4 key={pIdx} className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-3 mb-1">
                     {parseInline(trimmed.replace('#### ', ''))}
                   </h4>
                 );
               }
               if (trimmed.startsWith('### ')) {
                 return (
-                  <h3 key={pIdx} className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-2 flex items-center gap-2">
-                    <span className="w-1.5 h-4 rounded-full bg-indigo-500 inline-block"></span>
+                  <h3 key={pIdx} className="text-base font-bold text-slate-900 dark:text-slate-100 mt-3.5 mb-1.5 flex items-center gap-2">
+                    <span className="w-1.5 h-3.5 rounded-full bg-indigo-500 inline-block"></span>
                     {parseInline(trimmed.replace('### ', ''))}
                   </h3>
                 );
               }
               if (trimmed.startsWith('## ')) {
                 return (
-                  <h2 key={pIdx} className="text-xl font-extrabold text-slate-900 dark:text-white mt-5 mb-2 pb-1 border-b border-slate-200 dark:border-slate-800">
+                  <h2 key={pIdx} className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-4 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
                     {parseInline(trimmed.replace('## ', ''))}
                   </h2>
                 );
               }
               if (trimmed.startsWith('# ')) {
                 return (
-                  <h1 key={pIdx} className="text-2xl font-black text-slate-900 dark:text-white mt-6 mb-3">
+                  <h1 key={pIdx} className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mt-5 mb-2.5">
                     {parseInline(trimmed.replace('# ', ''))}
                   </h1>
                 );
@@ -77,7 +84,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                 return (
                   <blockquote
                     key={pIdx}
-                    className="border-l-4 border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 p-3 rounded-r-lg text-sm text-indigo-950 dark:text-indigo-200 italic my-2"
+                    className="border-l-3 border-indigo-400 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 rounded-r-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 italic my-2"
                   >
                     {parseInline(trimmed.replace(/^>\s*/gm, ''))}
                   </blockquote>
@@ -88,7 +95,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
               if (trimmed.split('\n').every(line => /^[-*]\s+/.test(line.trim()))) {
                 const items = trimmed.split('\n').map(line => line.trim().replace(/^[-*]\s+/, ''));
                 return (
-                  <ul key={pIdx} className="space-y-1.5 my-2 pl-4 list-disc marker:text-indigo-500 text-sm sm:text-base">
+                  <ul key={pIdx} className="space-y-1 my-2 pl-4 list-disc marker:text-indigo-500 text-xs sm:text-sm text-slate-800 dark:text-slate-200">
                     {items.map((item, iIdx) => (
                       <li key={iIdx} className="pl-1">
                         {parseInline(item)}
@@ -102,7 +109,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
               if (trimmed.split('\n').every(line => /^\d+\.\s+/.test(line.trim()))) {
                 const items = trimmed.split('\n').map(line => line.trim().replace(/^\d+\.\s+/, ''));
                 return (
-                  <ol key={pIdx} className="space-y-1.5 my-2 pl-4 list-decimal marker:text-indigo-500 marker:font-semibold text-sm sm:text-base">
+                  <ol key={pIdx} className="space-y-1 my-2 pl-4 list-decimal marker:text-indigo-500 marker:font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
                     {items.map((item, iIdx) => (
                       <li key={iIdx} className="pl-1">
                         {parseInline(item)}
@@ -115,7 +122,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
               // Regular paragraph with potential single newlines
               const lines = trimmed.split('\n');
               return (
-                <p key={pIdx} className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                <p key={pIdx} className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
                   {lines.map((line, lIdx) => (
                     <React.Fragment key={lIdx}>
                       {parseInline(line)}

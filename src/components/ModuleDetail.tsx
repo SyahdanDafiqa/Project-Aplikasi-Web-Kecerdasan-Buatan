@@ -259,7 +259,7 @@ export const ModuleDetail: React.FC<ModuleDetailProps> = ({
               const isCorrect = selectedIdx === q.correctAnswerIndex;
 
               return (
-                <div key={q.id} className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-800">
+                <div key={q.id} className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
                   <div className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
                     {qIdx + 1}. {q.question}
                   </div>

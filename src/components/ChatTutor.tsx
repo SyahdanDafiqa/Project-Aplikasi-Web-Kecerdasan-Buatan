@@ -29,6 +29,10 @@ interface ChatTutorProps {
 
 const DEFAULT_PROMPTS = [
   {
+    title: 'Apa itu Machine Learning?',
+    query: 'Tolong jelaskan apa itu Machine Learning secara sederhana untuk pemula, apa bedanya dengan pemrograman biasa, dan contoh jenisnya.',
+  },
+  {
     title: 'Analisis Big-O',
     query: 'Bagaimana cara menganalisis kompleksitas waktu dan ruang (Big-O) pada algoritma rekursif?',
   },
@@ -43,10 +47,6 @@ const DEFAULT_PROMPTS = [
   {
     title: 'Event Loop JavaScript',
     query: 'Jelaskan perbedaan antrean Microtask vs Macrotask pada Event Loop JavaScript.',
-  },
-  {
-    title: 'Arsitektur Transformer',
-    query: 'Bagaimana cara kerja mekanisme Self-Attention pada model bahasa besar (LLM)?',
   },
 ];
 
@@ -206,9 +206,9 @@ Silakan ketik pertanyaan Anda atau pilih topik di bawah untuk memulai!`,
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] min-h-[550px] max-w-5xl mx-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-120px)] min-h-[550px] max-w-5xl mx-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 shadow-xl overflow-hidden">
       {/* Chat Header */}
-      <header className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xs flex items-center justify-between gap-3">
+      <header className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
@@ -266,7 +266,7 @@ Silakan ketik pertanyaan Anda atau pilih topik di bawah untuk memulai!`,
       )}
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-slate-50/50 dark:bg-slate-950/70">
         {messages.map((message) => {
           const isUser = message.role === 'user';
 
@@ -288,21 +288,39 @@ Silakan ketik pertanyaan Anda atau pilih topik di bawah untuk memulai!`,
 
               {/* Message Bubble */}
               <div
-                className={`group relative max-w-[88%] sm:max-w-[80%] rounded-3xl p-4 sm:p-5 shadow-xs text-xs sm:text-sm leading-relaxed ${
+                className={`group relative max-w-[90%] sm:max-w-[82%] text-xs sm:text-sm leading-relaxed transition-all ${
                   isUser
-                    ? 'bg-indigo-600 text-white rounded-tr-xs'
-                    : 'bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white rounded-tl-xs'
+                    ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-xs p-3.5 sm:p-4 shadow-sm'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-xs p-4 sm:p-5 shadow-sm'
                 }`}
               >
                 {/* Header inside bubble */}
-                <div className="flex items-center justify-between gap-3 mb-1 text-[11px] opacity-75">
-                  <span className="font-semibold">
-                    {isUser ? 'Anda (Mahasiswa)' : 'Dosen & Tutor AI'}
-                  </span>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div
+                  className={`flex items-center justify-between gap-3 mb-2 pb-1.5 border-b text-[11px] ${
+                    isUser
+                      ? 'border-indigo-500/40 text-indigo-100 font-medium'
+                      : 'border-slate-100 dark:border-slate-800/80 text-indigo-600 dark:text-indigo-400 font-semibold'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {isUser ? (
+                      <span>Mahasiswa</span>
+                    ) : (
+                      <>
+                        <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span>Dosen & Tutor Informatika</span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleCopyMessage(message.id, message.content)}
-                      className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                      className={`p-1 rounded transition-colors ${
+                        isUser
+                          ? 'text-indigo-200 hover:text-white hover:bg-indigo-700/50'
+                          : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                       title="Salin jawaban"
                     >
                       {copiedId === message.id ? (
@@ -359,7 +377,7 @@ Silakan ketik pertanyaan Anda atau pilih topik di bawah untuk memulai!`,
 
       {/* Code Snippet Input Area (Collapsible) */}
       {showCodeInput && (
-        <div className="px-4 py-3 bg-slate-100/80 dark:bg-slate-850 border-t border-slate-200 dark:border-slate-800">
+        <div className="px-4 py-3 bg-slate-100/80 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between mb-1.5 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-mono flex items-center gap-1.5">
               <FileCode className="w-3.5 h-3.5 text-indigo-500" />
