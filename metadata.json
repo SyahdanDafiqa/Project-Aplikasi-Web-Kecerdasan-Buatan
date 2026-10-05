@@ -1,0 +1,7 @@
+{
+  "name": "InformatikaLab - Portal Pembelajaran & AI Tutor Teknik Informatika",
+  "description": "Media pembelajaran mandiri interaktif untuk mahasiswa Teknik Informatika dengan modul materi kuliah terstruktur, pencarian, syntax highlighting, dan AI Chatbot Tutor cerdas berbasis Google Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
