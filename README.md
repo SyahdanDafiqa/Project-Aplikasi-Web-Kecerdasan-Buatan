@@ -71,14 +71,15 @@ InformatikaLab adalah platform pembelajaran mandiri interaktif berbasis web yang
 ### 2. Kloning & Pemasangan Dependensi
 ```bash
 # Kloning repositori (atau unduh zip)
-git clone https://github.com/username/informatikalab.git
+git clone https://github.com/SyahdanDafiqa/Project-Aplikasi-Web-Kecerdasan-Buatan.git
 
 # Masuk ke direktori proyek
-cd informatikalab
+cd Project-Aplikasi-Web-Kecerdasan-Buatan
 
 # Pasang semua paket dependensi
 npm install
 ```
+> **Catatan**: File `.npmrc` dengan `legacy-peer-deps=true` dan `vercel.json` sudah disediakan untuk memastikan instalasi dan build di Vercel maupun lokal berjalan mulus tanpa konflik peer-dependency.
 
 ### 3. Konfigurasi File Lingkungan (`.env`)
 Salin berkas `.env.example` menjadi `.env`:
