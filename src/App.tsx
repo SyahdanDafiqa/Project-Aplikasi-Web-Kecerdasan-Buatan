@@ -7,11 +7,19 @@ import { ModuleDetail } from './components/ModuleDetail';
 import { ChatTutor } from './components/ChatTutor';
 import { QuizView } from './components/QuizView';
 import { ProgressDashboard } from './components/ProgressDashboard';
+import { EvaluationDashboard } from './components/EvaluationDashboard';
 import { Footer } from './components/Footer';
+import { EVAL_DATASET } from './data/evalDataset';
+import { evaluateSingleResponse } from './utils/evalEngine';
+import { checkServerStatus, getFallbackResponse } from './services/geminiService';
+import { ChatFeedbackEntry, EvalCaseResult, EvalTestCase } from './types';
 import { Bot, Sparkles } from 'lucide-react';
 
 const LOCAL_STORAGE_PROGRESS_KEY = 'informatikalab_user_progress';
 const LOCAL_STORAGE_THEME_KEY = 'informatikalab_theme';
+const LOCAL_STORAGE_EVAL_CASES_KEY = 'informatikalab_custom_eval_cases';
+const LOCAL_STORAGE_EVAL_RESULTS_KEY = 'informatikalab_eval_results';
+const LOCAL_STORAGE_CHAT_FEEDBACK_KEY = 'informatikalab_chat_feedbacks';
 
 export default function App() {
   // Theme state: dark / light
@@ -39,7 +47,92 @@ export default function App() {
   };
 
   // Main navigation tab
-  const [activeTab, setActiveTab] = useState<'modules' | 'chat' | 'quiz' | 'stats'>('modules');
+  const [activeTab, setActiveTab] = useState<'modules' | 'chat' | 'quiz' | 'eval' | 'stats'>('modules');
+
+  // Server Gemini key availability
+  const [hasGeminiKey, setHasGeminiKey] = useState<boolean | null>(null);
+  useEffect(() => {
+    checkServerStatus().then((status) => setHasGeminiKey(status.hasKey));
+  }, []);
+
+  // Custom evaluation test cases
+  const [customEvalCases, setCustomEvalCases] = useState<EvalTestCase[]>(() => {
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_EVAL_CASES_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_EVAL_CASES_KEY, JSON.stringify(customEvalCases));
+    } catch {
+      // ignore
+    }
+  }, [customEvalCases]);
+
+  const allEvalCases = React.useMemo(
+    () => [...EVAL_DATASET, ...customEvalCases],
+    [customEvalCases]
+  );
+
+  // Evaluation results map (initialized deterministically via real local evaluation engine if empty)
+  const [evalResultsMap, setEvalResultsMap] = useState<Record<string, EvalCaseResult>>(() => {
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_EVAL_RESULTS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Object.keys(parsed).length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    const baseline: Record<string, EvalCaseResult> = {};
+    for (const tc of EVAL_DATASET) {
+      const resp = getFallbackResponse(tc.question, tc.topicContext);
+      baseline[tc.id] = evaluateSingleResponse(tc, resp, 14, 'fallback-local');
+    }
+    return baseline;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_EVAL_RESULTS_KEY, JSON.stringify(evalResultsMap));
+    } catch {
+      // ignore
+    }
+  }, [evalResultsMap]);
+
+  // Human-in-the-loop chat feedback entries
+  const [chatFeedbacks, setChatFeedbacks] = useState<ChatFeedbackEntry[]>(() => {
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_CHAT_FEEDBACK_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_CHAT_FEEDBACK_KEY, JSON.stringify(chatFeedbacks));
+    } catch {
+      // ignore
+    }
+  }, [chatFeedbacks]);
+
+  const handleRateChatResponse = (entry: ChatFeedbackEntry) => {
+    setChatFeedbacks((prev) => {
+      const filtered = prev.filter((f) => f.messageId !== entry.messageId);
+      return [entry, ...filtered];
+    });
+  };
 
   // Currently viewed module (if in detail mode)
   const [selectedModule, setSelectedModule] = useState<CourseModule | null>(null);
@@ -135,7 +228,7 @@ export default function App() {
   };
 
   // Change tab
-  const handleTabChange = (tab: 'modules' | 'chat' | 'quiz' | 'stats') => {
+  const handleTabChange = (tab: 'modules' | 'chat' | 'quiz' | 'eval' | 'stats') => {
     setActiveTab(tab);
     if (tab !== 'modules') {
       setSelectedModule(null);
@@ -197,6 +290,9 @@ export default function App() {
               currentTopicContext={chatTopicContext}
               onClearContext={() => setChatTopicContext(undefined)}
               initialCodeSnippet={chatInitialCode}
+              chatFeedbacks={chatFeedbacks}
+              onRateResponse={handleRateChatResponse}
+              onOpenEvalDashboard={() => handleTabChange('eval')}
             />
           </div>
         )}
@@ -205,6 +301,27 @@ export default function App() {
           <QuizView
             modules={COURSE_MODULES}
             onOpenChatWithTopic={handleOpenChatWithTopic}
+          />
+        )}
+
+        {activeTab === 'eval' && (
+          <EvaluationDashboard
+            testCases={allEvalCases}
+            resultsMap={evalResultsMap}
+            onUpdateResults={setEvalResultsMap}
+            onAddTestCase={(newCase) => setCustomEvalCases((prev) => [...prev, newCase])}
+            onDeleteCustomTestCase={(id) => {
+              setCustomEvalCases((prev) => prev.filter((c) => c.id !== id));
+              setEvalResultsMap((prev) => {
+                const next = { ...prev };
+                delete next[id];
+                return next;
+              });
+            }}
+            chatFeedbacks={chatFeedbacks}
+            onClearFeedbacks={() => setChatFeedbacks([])}
+            onOpenChat={() => handleTabChange('chat')}
+            hasGeminiKey={hasGeminiKey}
           />
         )}
 

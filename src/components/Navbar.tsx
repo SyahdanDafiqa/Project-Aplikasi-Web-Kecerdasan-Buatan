@@ -11,12 +11,13 @@ import {
   Sun,
   X,
   Bookmark,
-  Award
+  Award,
+  BarChart3
 } from 'lucide-react';
 
 interface NavbarProps {
-  activeTab: 'modules' | 'chat' | 'quiz' | 'stats';
-  onTabChange: (tab: 'modules' | 'chat' | 'quiz' | 'stats') => void;
+  activeTab: 'modules' | 'chat' | 'quiz' | 'eval' | 'stats';
+  onTabChange: (tab: 'modules' | 'chat' | 'quiz' | 'eval' | 'stats') => void;
   isDark: boolean;
   onToggleTheme: () => void;
   searchQuery: string;
@@ -37,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleNavClick = (tab: 'modules' | 'chat' | 'quiz' | 'stats') => {
+  const handleNavClick = (tab: 'modules' | 'chat' | 'quiz' | 'eval' | 'stats') => {
     onTabChange(tab);
     setMobileMenuOpen(false);
   };
@@ -129,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => handleNavClick('quiz')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
                 activeTab === 'quiz'
                   ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -137,6 +138,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <BrainCircuit className="w-4 h-4 text-amber-500" />
               <span>Kuis Evaluasi</span>
+            </button>
+
+            <button
+              onClick={() => handleNavClick('eval')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
+                activeTab === 'eval'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4 text-sky-500" />
+              <span>Evaluasi AI</span>
             </button>
 
             <button
@@ -246,7 +259,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <div className="flex items-center gap-2.5">
               <BrainCircuit className="w-4 h-4 text-amber-500" />
-              <span>Kuis Pemahaman & Latihan</span>
+              <span>Kuis Pemahaman &amp; Latihan</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleNavClick('eval')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium ${
+              activeTab === 'eval'
+                ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <BarChart3 className="w-4 h-4 text-sky-500" />
+              <span>Metrik Evaluasi Chatbot (F1 &amp; Akurasi)</span>
             </div>
           </button>
 

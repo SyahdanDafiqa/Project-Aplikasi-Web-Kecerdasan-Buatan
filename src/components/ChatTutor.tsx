@@ -15,9 +15,12 @@ import {
   Info,
   Maximize2,
   Minimize2,
-  Flame
+  Flame,
+  ThumbsUp,
+  ThumbsDown,
+  BarChart3
 } from 'lucide-react';
-import { ChatMessage } from '../types';
+import { ChatFeedbackEntry, ChatMessage } from '../types';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { sendChatMessageStream } from '../services/geminiService';
 
@@ -25,6 +28,9 @@ interface ChatTutorProps {
   currentTopicContext?: string;
   onClearContext?: () => void;
   initialCodeSnippet?: string;
+  chatFeedbacks?: ChatFeedbackEntry[];
+  onRateResponse?: (entry: ChatFeedbackEntry) => void;
+  onOpenEvalDashboard?: () => void;
 }
 
 const DEFAULT_PROMPTS = [
@@ -54,6 +60,9 @@ export const ChatTutor: React.FC<ChatTutorProps> = ({
   currentTopicContext,
   onClearContext,
   initialCodeSnippet,
+  chatFeedbacks = [],
+  onRateResponse,
+  onOpenEvalDashboard,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     return [
@@ -233,6 +242,16 @@ Silakan ketik pertanyaan Anda atau pilih topik di bawah untuk memulai!`,
         </div>
 
         <div className="flex items-center gap-1.5">
+          {onOpenEvalDashboard && (
+            <button
+              onClick={onOpenEvalDashboard}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              title="Lihat Metrik Akurasi & F1-Score Chatbot"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Metrik Evaluasi</span>
+            </button>
+          )}
           <button
             onClick={handleResetChat}
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
@@ -338,7 +357,73 @@ Silakan ketik pertanyaan Anda atau pilih topik di bawah untuk memulai!`,
                 ) : (
                   <div>
                     {message.content ? (
-                      <MarkdownRenderer content={message.content} />
+                      <>
+                        <MarkdownRenderer content={message.content} />
+                        {onRateResponse &&
+                          !message.isStreaming &&
+                          !message.id.startsWith('msg-welcome') && (() => {
+                            const existingFeedback = chatFeedbacks.find(
+                              (f) => f.messageId === message.id
+                            );
+                            const msgIndex = messages.findIndex((m) => m.id === message.id);
+                            const prevUserMsg =
+                              msgIndex > 0 ? messages[msgIndex - 1] : undefined;
+                            const userQuestion =
+                              prevUserMsg?.role === 'user' ? prevUserMsg.content : '';
+
+                            return (
+                              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-[11px]">
+                                <span className="text-slate-400 dark:text-slate-500">
+                                  Evaluasi jawaban ini:
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() =>
+                                      onRateResponse({
+                                        id: `fb-${message.id}`,
+                                        messageId: message.id,
+                                        userQuestion,
+                                        assistantResponse: message.content,
+                                        topicContext: currentTopicContext,
+                                        rating: 'accurate',
+                                        timestamp: Date.now(),
+                                      })
+                                    }
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${
+                                      existingFeedback?.rating === 'accurate'
+                                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
+                                    }`}
+                                  >
+                                    <ThumbsUp className="w-3 h-3" />
+                                    <span>Akurat</span>
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      onRateResponse({
+                                        id: `fb-${message.id}`,
+                                        messageId: message.id,
+                                        userQuestion,
+                                        assistantResponse: message.content,
+                                        topicContext: currentTopicContext,
+                                        rating: 'inaccurate',
+                                        timestamp: Date.now(),
+                                      })
+                                    }
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${
+                                      existingFeedback?.rating === 'inaccurate'
+                                        ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-semibold'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'
+                                    }`}
+                                  >
+                                    <ThumbsDown className="w-3 h-3" />
+                                    <span>Kurang Tepat</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                      </>
                     ) : (
                       <div className="flex items-center gap-2 text-indigo-500 dark:text-indigo-400 py-1">
                         <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />

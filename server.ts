@@ -102,11 +102,10 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const responseStream = await ai.models.generateContentStream({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-4-hydrogen',
       contents,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.7,
       },
     });
 
@@ -127,6 +126,54 @@ app.post('/api/chat', async (req, res) => {
     res.end();
   }
 });
+
+// Chatbot benchmark evaluation endpoint
+app.post('/api/evaluate', async (req, res) => {
+  const { question, topicContext } = req.body;
+  const client = getGeminiClient();
+
+  if (!client) {
+    return res.status(503).json({
+      error: 'GEMINI_API_KEY belum dikonfigurasi di server.',
+      code: 'MISSING_API_KEY',
+    });
+  }
+
+  if (!question || typeof question !== 'string' || !question.trim()) {
+    return res.status(400).json({ error: 'Pertanyaan uji tidak boleh kosong.' });
+  }
+
+  const startTime = Date.now();
+
+  try {
+    const promptText = topicContext
+      ? `[Konteks Modul: ${topicContext}]\nPertanyaan Mahasiswa: ${question.trim()}`
+      : question.trim();
+
+    const response = await client.ai.models.generateContent({
+      model: 'gemini-4-hydrogen',
+      contents: promptText,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+      },
+    });
+
+    const latencyMs = Date.now() - startTime;
+    const responseText = (response.text ?? '').trim();
+
+    return res.json({
+      responseText,
+      latencyMs,
+      model: 'gemini-4-hydrogen',
+    });
+  } catch (error: any) {
+    console.error('Gemini Evaluation Error:', error);
+    return res.status(500).json({
+      error: error?.message || 'Gagal menjalankan evaluasi Gemini.',
+    });
+  }
+});
+
 
 // Start server and handle Vite middleware in dev or static files in production
 async function startServer() {

@@ -236,58 +236,54 @@ export async function sendChatMessageStream(options: ChatRequestOptions): Promis
   }
 }
 
-function simulateSmartFallback(
-  query: string,
-  topicContext: string | undefined,
-  onChunk: (chunk: string) => void,
-  onFinish: () => void
-) {
-  let fallbackAnswer = '';
+export function getFallbackResponse(query: string, topicContext?: string): string {
+  const lower = query.toLowerCase();
 
   if (
-    query.includes('machine learning') ||
-    query.includes('apa itu ml') ||
-    query.includes('pembelajaran mesin') ||
-    query.includes('belajar mesin')
+    lower.includes('machine learning') ||
+    lower.includes('apa itu ml') ||
+    lower.includes('pembelajaran mesin') ||
+    lower.includes('belajar mesin')
   ) {
-    fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['machine-learning'];
+    return FALLBACK_KNOWLEDGE_BASE['machine-learning'];
   } else if (
-    query.includes('big-o') ||
-    query.includes('kompleksitas') ||
-    query.includes('asymptotic') ||
-    query.includes('algoritma')
+    lower.includes('big-o') ||
+    lower.includes('kompleksitas') ||
+    lower.includes('asymptotic') ||
+    lower.includes('algoritma')
   ) {
-    fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['big-o'];
+    return FALLBACK_KNOWLEDGE_BASE['big-o'];
   } else if (
-    query.includes('handshake') ||
-    query.includes('tcp') ||
-    query.includes('udp') ||
-    query.includes('jaringan')
+    lower.includes('handshake') ||
+    lower.includes('tcp') ||
+    lower.includes('udp') ||
+    lower.includes('jaringan')
   ) {
-    fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['handshake'];
+    return FALLBACK_KNOWLEDGE_BASE['handshake'];
   } else if (
-    query.includes('join') ||
-    query.includes('sql') ||
-    query.includes('database') ||
-    query.includes('normalisasi')
+    lower.includes('join') ||
+    lower.includes('sql') ||
+    lower.includes('database') ||
+    lower.includes('normalisasi')
   ) {
-    fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['sql-join'];
+    return FALLBACK_KNOWLEDGE_BASE['sql-join'];
   } else if (
-    query.includes('rest') ||
-    query.includes('api') ||
-    query.includes('http') ||
-    query.includes('web')
+    lower.includes('rest') ||
+    lower.includes('api') ||
+    lower.includes('http') ||
+    lower.includes('web')
   ) {
-    fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['rest'];
+    return FALLBACK_KNOWLEDGE_BASE['rest'];
   } else if (
-    query.includes('neural') ||
-    query.includes('ann') ||
-    query.includes('jaringan saraf') ||
-    query.includes('backpropagation')
+    lower.includes('neural') ||
+    lower.includes('ann') ||
+    lower.includes('jaringan saraf') ||
+    lower.includes('backpropagation')
   ) {
-    fallbackAnswer = FALLBACK_KNOWLEDGE_BASE['ann'];
-  } else {
-    fallbackAnswer = `Halo mahasiswa Informatika! 👋
+    return FALLBACK_KNOWLEDGE_BASE['ann'];
+  }
+
+  return `Halo mahasiswa Informatika! 👋
 
 Pertanyaan Anda sangat menarik${topicContext ? ` mengenai topik **${topicContext}**` : ''}.
 
@@ -306,7 +302,84 @@ interface SolutionContract<T> {
 \`\`\`
 
 > 💡 **Info Konfigurasi API**: Anda dapat menghubungkan Google Gemini API secara langsung dengan mengisi \`GEMINI_API_KEY\` di panel Secrets AI Studio atau berkas \`.env\` untuk mendapatkan respons interaktif real-time tanpa batas!`;
+}
+
+export interface EvaluatePromptResponse {
+  responseText: string;
+  latencyMs: number;
+  evaluatedVia: 'gemini-live' | 'fallback-local';
+  errorNotice?: string;
+}
+
+export async function evaluateChatbotPrompt(
+  question: string,
+  topicContext?: string,
+  useLiveGemini = true
+): Promise<EvaluatePromptResponse> {
+  if (useLiveGemini) {
+    const start = performance.now();
+    try {
+      const res = await fetch('/api/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, topicContext }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          responseText: data.responseText || '',
+          latencyMs: typeof data.latencyMs === 'number' ? data.latencyMs : Math.round(performance.now() - start),
+          evaluatedVia: 'gemini-live',
+        };
+      }
+
+      let errBody: any = {};
+      try {
+        errBody = await res.json();
+      } catch {
+        // ignore
+      }
+
+      const fallbackStart = performance.now();
+      const responseText = getFallbackResponse(question, topicContext);
+      const latencyMs = Math.max(12, Math.round(performance.now() - fallbackStart));
+      return {
+        responseText,
+        latencyMs,
+        evaluatedVia: 'fallback-local',
+        errorNotice: errBody?.error || `HTTP ${res.status}`,
+      };
+    } catch (err: any) {
+      const fallbackStart = performance.now();
+      const responseText = getFallbackResponse(question, topicContext);
+      const latencyMs = Math.max(12, Math.round(performance.now() - fallbackStart));
+      return {
+        responseText,
+        latencyMs,
+        evaluatedVia: 'fallback-local',
+        errorNotice: err?.message || 'Koneksi server tidak tersedia',
+      };
+    }
   }
+
+  const start = performance.now();
+  const responseText = getFallbackResponse(question, topicContext);
+  const latencyMs = Math.max(8, Math.round(performance.now() - start));
+  return {
+    responseText,
+    latencyMs,
+    evaluatedVia: 'fallback-local',
+  };
+}
+
+function simulateSmartFallback(
+  query: string,
+  topicContext: string | undefined,
+  onChunk: (chunk: string) => void,
+  onFinish: () => void
+) {
+  const fallbackAnswer = getFallbackResponse(query, topicContext);
 
   // Stream out the fallback answer in realistic chunks for smooth UX
   const words = fallbackAnswer.split(' ');
